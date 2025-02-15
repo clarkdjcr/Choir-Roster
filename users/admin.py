@@ -1,24 +1,16 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth import get_user_model
-from .models import ChoirMember
+from .models import CustomUser
 
-class ChoirMemberAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'voice_part', 'phone_number')
-    list_filter = ('voice_part',)
-    search_fields = ('first_name', 'last_name', 'phone_number')
-    ordering = ('last_name', 'first_name')
-
-    fieldsets = (
-        ('Personal Information', {
-            'fields': ('first_name', 'last_name', 'phone_number', 'address')
-        }),
-        ('Choir Details', {
-            'fields': ('voice_part', 'picture')
-        }),
-        ('Account Information', {
-            'fields': ('user',)
-        }),
+class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'voice_part', 'is_staff')
+    list_filter = ('voice_part', 'is_staff', 'is_superuser')
+    fieldsets = UserAdmin.fieldsets + (
+        ('Choir Information', {'fields': ('phone_number', 'address', 'profile_picture', 'voice_part')}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Personal Info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Choir Information', {'fields': ('phone_number', 'address', 'profile_picture', 'voice_part')}),
     )
 
-admin.site.register(ChoirMember, ChoirMemberAdmin) 
+admin.site.register(CustomUser, CustomUserAdmin) 

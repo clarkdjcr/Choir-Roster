@@ -22,3 +22,15 @@ class ChoirMemberForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'picture': forms.FileInput(attrs={'class': 'form-control'}),
         }
+
+class CustomUserEditForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone_number', 
+                 'address', 'profile_picture', 'voice_part', 'is_admin']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make all fields optional for editing
+        for field in self.fields:
+            self.fields[field].required = False

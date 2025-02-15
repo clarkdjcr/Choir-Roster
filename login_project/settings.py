@@ -1,8 +1,7 @@
 import os
-from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Get the base directory of your project
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -14,8 +13,9 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
 ]
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'user_list'
+LOGOUT_REDIRECT_URL = 'login'
 
 # Set DEBUG to True for development
 DEBUG = True
@@ -37,7 +37,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            '/Volumes/SSD/Choir Projects/RosterApplication/templates',
+            '/Volumes/SSD/Choir Projects/Choir-Roster/RosterApplication/templates',  # Update to include Choir-Roster
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -46,20 +46,23 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
         },
     },
 ]
 
-# Add this to fix the default auto field warning
+# Make sure there's no extra indentation here
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# Static files (CSS, JavaScript, Images)
+# Static files configuration
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    '/Volumes/SSD/Choir Projects/Choir-Roster/RosterApplication/static',
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 ROOT_URLCONF = 'login_project.urls'
 
@@ -69,13 +72,17 @@ SECRET_KEY = 'django-insecure-h9d7f0q^dz7t4@!p3$w2y#n8m5k2l6j9'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
-# Add these settings for media files
+# Media files configuration
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/Volumes/SSD/Choir Projects/Choir-Roster/RosterApplication/media'
+
+# Make sure the media directory exists
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)
 
 LOGGING = {
     'version': 1,
@@ -101,4 +108,7 @@ EMAIL_HOST_PASSWORD = 'usvc kpjm mwhx mscp'  # Replace with your Gmail App Passw
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # For development/testing, you can use this instead to see emails in the console:
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' 
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Add CSRF settings
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8003']  # Add your development server 

@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, get_user_model, logout
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, ChoirMemberForm
+from .forms import CustomUserCreationForm, ChoirMemberForm, CustomUserEditForm
 from django.contrib import messages
-from .models import ChoirMember
+from .models import ChoirMember, CustomUser
 import logging
 from django.conf import settings
 from django.http import HttpResponse
@@ -12,14 +12,29 @@ from django.middleware.csrf import get_token
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import views as auth_views
+from django import forms
 
 logger = logging.getLogger(__name__)
 
 # Create a custom UserCreationForm for our CustomUser
 class CustomUserCreationForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+    phone_number = forms.CharField(required=False)
+    address = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+    profile_picture = forms.ImageField(required=False)
+    voice_part = forms.ChoiceField(choices=[
+        ('soprano', 'Soprano'),
+        ('alto', 'Alto'),
+        ('tenor', 'Tenor'),
+        ('bass', 'Bass'),
+    ], required=True)
+
+    class Meta:
         model = get_user_model()
-        fields = UserCreationForm.Meta.fields
+        fields = ('username', 'email', 'first_name', 'last_name', 'phone_number', 
+                 'address', 'profile_picture', 'voice_part', 'password1', 'password2')
 
 @csrf_protect
 def register(request):
@@ -27,7 +42,7 @@ def register(request):
     try:
         if request.method == 'POST':
             print("POST data received")  # Debug print
-            user_form = CustomUserCreationForm(request.POST)
+            user_form = CustomUserCreationForm(request.POST, request.FILES)
             member_form = ChoirMemberForm(request.POST, request.FILES)
             
             if user_form.is_valid() and member_form.is_valid():
@@ -362,3 +377,62 @@ class CustomLoginView(auth_views.LoginView):
         context = super().get_context_data(**kwargs)
         context['show_password_reset'] = True
         return context 
+
+@login_required
+def user_list(request):
+    users = CustomUser.objects.all().order_by('username')
+    # Debug print to see what's in the database
+    for user in users:
+        print(f"User ID: {user.id}, Username: {user.username}, Name: {user.first_name} {user.last_name}, Email: {user.email}")
+        # If first_name and last_name are empty, use username as display name
+        if not user.first_name and not user.last_name:
+            user.display_name = user.username
+        else:
+            user.display_name = f"{user.first_name} {user.last_name}"
+    return render(request, 'users/user_list.html', {'users': users})
+
+def register(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save()
+            return redirect('login')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+@login_required
+def edit_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    print(f"Editing user: {user.username} (ID: {user.id})")  # Debug print
+    
+    if request.method == 'POST':
+        form = CustomUserEditForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user_list')
+    else:
+        form = CustomUserEditForm(instance=user)
+    
+    return render(request, 'registration/edit_user.html', {'form': form, 'user': user})
+
+@login_required
+def delete_user(request, user_id):
+    if not request.user.is_staff:
+        return redirect('user_list')
+    
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        print(f"Found user to delete: {user.first_name} {user.last_name} (ID: {user.id})")  # Debug print
+        
+        if request.method == 'POST':
+            user.delete()
+            print(f"Successfully deleted user: {user.first_name} {user.last_name} (ID: {user.id})")  # Debug print
+            return redirect('user_list')
+        else:
+            # If not a POST request, render confirmation page
+            return render(request, 'users/delete_confirm.html', {'user': user})
+            
+    except CustomUser.DoesNotExist:
+        print(f"Failed to find user with ID: {user_id}")  # Debug print
+        return redirect('user_list') 
