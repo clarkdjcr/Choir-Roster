@@ -1,0 +1,18 @@
+# Python
+*,pyc
+--pycache__/
+*.py[cod]
+*.class
+# Django
+#.log
+db.sqlite3
+media/*
+!media/gitkeep
+# macOS
+#DS_Store
+._*
+# Environment
+.env
+.venv
+env/
+venv/

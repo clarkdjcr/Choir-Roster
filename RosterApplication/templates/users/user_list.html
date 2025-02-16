@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Choir Members{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Choir Members</h2>
+        {% if user.is_staff %}
+        <a href="{% url 'register' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add New Member
+        </a>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        {% for member in users %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                {% if member.profile_picture %}
+                    <img src="{{ member.profile_picture.url }}" class="card-img-top" alt="{{ member.first_name }} {{ member.last_name }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ member.display_name }}</h5>
+                    <p class="card-text">
+                        Voice Part: {{ member.voice_part|default:"Not specified" }}<br>
+                        Email: {{ member.email }}<br>
+                        Phone: {{ member.phone_number|default:"Not specified" }}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    {% if user.is_staff or user == member %}
+                    <div class="btn-group w-100">
+                        <a href="{% url 'edit_user' member.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        {% if user.is_staff %}
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ member.id }}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if user.is_staff %}
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteModal{{ member.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete {{ member.first_name }} {{ member.last_name }}?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form action="{% url 'delete_user' member.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

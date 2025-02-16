@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Choir Roster{% endblock %}
+
+{% block content %}
+<style>
+    /* Add your CSS from the previous response here */
+</style>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>DUMC Chancel Choir Roster</h1>
+        <a href="{% url 'add_member' %}" class="btn btn-primary">Add New Member</a>
+    </div>
+
+    <div class="roster-flex">
+        {% for member in choir_members %}
+        <div class="member-card">
+            {% if member.picture %}
+                <img src="{{ member.picture.url }}" 
+                     alt="{{ member.first_name }} {{ member.last_name }}"
+                     class="member-image">
+            {% endif %}
+            <div class="member-info">
+                <h5>{{ member.first_name }} {{ member.last_name }}</h5>
+                <p>
+                    <strong>Voice Part:</strong> {{ member.get_voice_part_display }}<br>
+                    <strong>Phone:</strong> {{ member.phone_number }}<br>
+                    <strong>Address:</strong> {{ member.address }}
+                </p>
+            </div>
+            <div class="member-actions">
+                <a href="{% url 'edit_member' member.id %}" 
+                   class="btn btn-primary">Edit</a>
+                <button type="button" 
+                        class="btn btn-danger" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteModal{{ member.id }}">Delete</button>
+            </div>
+        </div>
+
+        <!-- Delete Modal -->
+        <div class="modal fade" id="deleteModal{{ member.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete {{ member.first_name }} {{ member.last_name }}?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="{% url 'delete_member' member.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info w-100">
+            No choir members added yet. Click "Add New Member" to get started.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if messages %}
+<div class="toast-container">
+    {% for message in messages %}
+    <div class="toast show" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto">Message</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %} 

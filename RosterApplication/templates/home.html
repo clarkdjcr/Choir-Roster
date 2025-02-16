@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Home - DUMC Choir{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>Welcome{% if user.is_authenticated %}, {{ user.username }}{% endif %}!</h2>
+        {% if user.is_authenticated %}
+            {% if user.is_admin %}
+                <p>You are logged in as an admin user.</p>
+            {% else %}
+                <p>You are logged in as a choir member.</p>
+            {% endif %}
+        {% else %}
+            <p>Please <a href="{% url 'login' %}">login</a> to continue.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
